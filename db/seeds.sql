@@ -9,7 +9,7 @@ VALUES
 ('Junior Accountant', 50000.00, 1),
 ('Senior Accountant', 100000.00, 1),
 ('Junior Engineer', 65000.00, 2),
-('Senior Accountant', 120000.00, 2),
+('Senior Engineer', 120000.00, 2),
 ('Marketing Intern', 35000.00, 3),
 ('Head of Marketing', 110000.00, 3);
 
