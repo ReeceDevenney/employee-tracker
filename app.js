@@ -1,8 +1,16 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const cTable = require('console.table');
+const {departmentList, roleList, nameList, exctractID} = require('./test.js')
 
-const promptUser = () => {
+
+async function promptUser () {
+    depArr = []
+    roleArr = []
+    nameArr = []
+    await departmentList()
+    await roleList()
+    await nameList()
     return inquirer.prompt([
         {
             type: 'list',
@@ -29,9 +37,10 @@ const promptUser = () => {
             when: (answers) => answers.openers === 'Add a role'
         },
         {
-            type: 'input',
+            type: 'list',
             name: 'department_id',
             message: 'What is the department id for this role?',
+            choices: depArr,
             when: (answers) => answers.openers === 'Add a role'
         },
         {
@@ -53,27 +62,31 @@ const promptUser = () => {
             when: (answers) => answers.openers === 'Add an employee'
         },
         {
-            type: 'input',
+            type: 'list',
             name: 'role_id',
-            message: 'What is thier role ID?',
+            message: 'What is thier role?',
+            choices: roleArr,
             when: (answers) => answers.openers === 'Add an employee'
         },
         {
-            type: 'input',
+            type: 'list',
             name: 'manager_id',
-            message: 'What is thier manager ID?',
+            message: 'Who is thier manager?',
+            choices: nameArr,
             when: (answers) => answers.openers === 'Add an employee'
         },
         {
-            type: 'input',
+            type: 'list',
             name: 'emp_update_id',
-            message: 'What is the ID of the employee you wish to update?',
+            message: 'Who is the employee you want to update?',
+            choices: nameArr,
             when: (answers) => answers.openers === 'Update an employee'
         },
         {
-            type: 'input',
+            type: 'list',
             name: 'role_update_id',
-            message: 'What is the new role ID for this employee?',
+            message: 'What is the new role for this employee?',
+            choices: roleArr,
             when: (answers) => answers.openers === 'Update an employee'
         },
 
@@ -123,7 +136,8 @@ async function followup({ openers, department, role, first_name, last_name, sala
             .catch(console.log)
     } else if (role) {
         const sql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?);`
-        const params = [role, salary, department_id]
+        const exDepID = exctractID(department_id)
+        const params = [role, salary, exDepID]
         await db.promise().query(sql, params)
             .then(([rows]) => {
                 console.table(rows);
@@ -131,7 +145,12 @@ async function followup({ openers, department, role, first_name, last_name, sala
             .catch(console.log)
     } else if (first_name) {
         const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?);`
-        const params = [first_name, last_name, role_id, manager_id]
+        const exRoleID = exctractID(role_id)
+        let exnameID = exctractID(manager_id)
+        if (manager_id === "NULL") {
+            exnameID = null
+        }
+        const params = [first_name, last_name, exRoleID, exnameID]
         await db.promise().query(sql, params)
             .then(([rows]) => {
                 console.table(rows);
@@ -140,7 +159,9 @@ async function followup({ openers, department, role, first_name, last_name, sala
     } else if (emp_update_id) {
         const sql = `UPDATE employee SET role_id = ?
                     WHERE id = ?;`
-        const params = [role_update_id, emp_update_id]
+        const exRoleID = exctractID(role_update_id)
+        const exnameID = exctractID(emp_update_id)
+        const params = [exRoleID, exnameID]
         await db.promise().query(sql, params)
             .then(([rows]) => {
                 console.table(rows);
@@ -148,14 +169,8 @@ async function followup({ openers, department, role, first_name, last_name, sala
             .catch(console.log)
     }
     promptUser()
-    .then(followup)
+        .then(followup)
 }
-
-// `SELECT employee.first_name, employee.last_name, role.title, role.salary, manager.fullname AS CONCAT (employee.first_name, '', employee.last_name)
-//         FROM employee
-//         LEFT JOIN role
-//         ON employee.role_id = role.id;`
-
 
 promptUser()
     .then(followup)
