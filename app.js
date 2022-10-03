@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 const cTable = require('console.table');
-const {departmentList, roleList, nameList, exctractID} = require('./test.js')
+const {departmentList, roleList, nameList, exctractID} = require('./utils/listFunctionality.js')
 
 
 async function promptUser () {
